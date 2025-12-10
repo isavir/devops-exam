@@ -5,9 +5,9 @@ environment = "production"
 
 # EKS Configuration
 cluster_version    = "1.28"
-node_instance_type = "t3.medium"
-desired_capacity   = 2
-max_capacity       = 4
+node_instance_type = "t3.small"
+desired_capacity   = 1
+max_capacity       = 1
 min_capacity       = 1
 
 # Network Configuration
