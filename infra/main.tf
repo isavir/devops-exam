@@ -3,7 +3,7 @@ terraform {
   backend "s3" {
     bucket  = "devops-exam-terraform-state-bucket-1234"
     key     = "terraform.tfstate"
-    region  = "us-east-2"
+    region  = "us-west-2"
     encrypt = true
   }
   required_providers {
