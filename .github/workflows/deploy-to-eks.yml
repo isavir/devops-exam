@@ -1,0 +1,144 @@
+name: Deploy to EKS
+
+on:
+  workflow_run:
+    workflows: ["Build and Test Services"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  KUBECTL_VERSION: "v1.28.0"
+
+jobs:
+  deploy:
+    name: Deploy to EKS Cluster
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Download Terraform outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-outputs
+          path: .
+        continue-on-error: true
+
+      - name: Download image tags
+        uses: actions/download-artifact@v4
+        with:
+          name: image-tags
+          path: .
+        continue-on-error: true
+
+      - name: Load deployment variables
+        run: |
+          # Load terraform outputs
+          if [ -f "terraform-outputs.env" ]; then
+            source terraform-outputs.env
+            echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" >> $GITHUB_ENV
+            echo "SQS_QUEUE_URL=$SQS_QUEUE_URL" >> $GITHUB_ENV
+            echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> $GITHUB_ENV
+          else
+            echo "Warning: terraform-outputs.env not found"
+          fi
+          
+          # Load image tags
+          if [ -f "image-tags.env" ]; then
+            source image-tags.env
+            echo "EMAIL_VALIDATION_IMAGE=$EMAIL_VALIDATION_IMAGE" >> $GITHUB_ENV
+            echo "EMAIL_PROCESSOR_IMAGE=$EMAIL_PROCESSOR_IMAGE" >> $GITHUB_ENV
+          else
+            echo "Warning: image-tags.env not found"
+          fi
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/${{ env.KUBECTL_VERSION }}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Update kubeconfig for EKS
+        run: |
+          if [ -n "$EKS_CLUSTER_NAME" ]; then
+            aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "${{ secrets.AWS_REGION }}"
+          else
+            echo "Error: EKS_CLUSTER_NAME not found"
+            exit 1
+          fi
+
+      - name: Verify cluster connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Create namespace if not exists
+        run: |
+          kubectl create namespace email-services --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy email-validation service
+        run: |
+          # Substitute environment variables in manifest
+          envsubst < infra/kubernetes-manifests/email-validation-service/manifest.yml > /tmp/email-validation-manifest.yml
+          
+          # Apply the manifest
+          kubectl apply -f /tmp/email-validation-manifest.yml
+          
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/email-validation-service -n email-services --timeout=300s
+
+      - name: Deploy email-processor service
+        run: |
+          # Substitute environment variables in manifest
+          envsubst < infra/kubernetes-manifests/email-processor-service/manifest.yml > /tmp/email-processor-manifest.yml
+          
+          # Apply the manifest
+          kubectl apply -f /tmp/email-processor-manifest.yml
+          
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/email-processor-service -n email-services --timeout=300s
+
+      - name: Verify deployments
+        run: |
+          echo "=== Deployments ==="
+          kubectl get deployments -n email-services
+          
+          echo "=== Pods ==="
+          kubectl get pods -n email-services
+          
+          echo "=== Services ==="
+          kubectl get services -n email-services
+
+      - name: Run health checks
+        run: |
+          # Wait a bit for services to be fully ready
+          sleep 30
+          
+          # Check if pods are running
+          kubectl get pods -n email-services -o wide
+          
+          # Get service endpoints
+          kubectl get endpoints -n email-services
+          
+          echo "Deployment completed successfully!"
+
+      - name: Cleanup temporary files
+        run: |
+          rm -f /tmp/email-validation-manifest.yml
+          rm -f /tmp/email-processor-manifest.yml

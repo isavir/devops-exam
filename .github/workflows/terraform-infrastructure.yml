@@ -1,0 +1,86 @@
+name: Terraform Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_VERSION: "1.5.7"
+
+jobs:
+  terraform:
+    name: Terraform Plan & Apply
+    runs-on: ubuntu-latest
+    outputs:
+      ecr_url: ${{ steps.terraform-outputs.outputs.ecr_url }}
+      eks_cluster_name: ${{ steps.terraform-outputs.outputs.eks_cluster_name }}
+      sqs_queue_url: ${{ steps.terraform-outputs.outputs.sqs_queue_url }}
+      s3_bucket_name: ${{ steps.terraform-outputs.outputs.s3_bucket_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: infra
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve tfplan
+
+      - name: Export Terraform Outputs
+        working-directory: infra
+        id: terraform-outputs
+        run: |
+          ECR_URL=$(terraform output -raw ecr_repository_url)
+          EKS_NAME=$(terraform output -raw cluster_name)
+          SQS_QUEUE_URL=$(terraform output -raw sqs_queue_url)
+          S3_BUCKET=$(terraform output -raw s3_bucket_name)
+          
+          echo "ecr_url=$ECR_URL" >> $GITHUB_OUTPUT
+          echo "eks_cluster_name=$EKS_NAME" >> $GITHUB_OUTPUT
+          echo "sqs_queue_url=$SQS_QUEUE_URL" >> $GITHUB_OUTPUT
+          echo "s3_bucket_name=$S3_BUCKET" >> $GITHUB_OUTPUT
+          
+          # Save to file for artifact
+          cat << EOF > terraform-outputs.env
+          ECR_URL=$ECR_URL
+          EKS_CLUSTER_NAME=$EKS_NAME
+          SQS_QUEUE_URL=$SQS_QUEUE_URL
+          S3_BUCKET_NAME=$S3_BUCKET
+          EOF
+
+      - name: Upload Terraform Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-outputs
+          path: infra/terraform-outputs.env
