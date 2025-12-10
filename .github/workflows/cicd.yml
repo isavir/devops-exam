@@ -1,227 +1,227 @@
-name: infra-ci-cd
+# name: infra-ci-cd
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - main
+#   workflow_dispatch:
 
-permissions:
-  contents: read
-  id-token: write
-  pages: write
+# permissions:
+#   contents: read
+#   id-token: write
+#   pages: write
 
-env:
-  # short sha used for image tags
-  SHORT_SHA: ${{ github.sha }}
+# env:
+#   # short sha used for image tags
+#   SHORT_SHA: ${{ github.sha }}
 
-jobs:
-  terraform:
-    name: terraform (plan & apply)
-    runs-on: ubuntu-latest
-    outputs:
-      ecr_url: ${{ steps.set-outputs.outputs.ecr_url }}
-      eks_cluster_name: ${{ steps.set-outputs.outputs.eks_cluster_name }}
-      rds_endpoint: ${{ steps.set-outputs.outputs.rds_endpoint }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+# jobs:
+#   terraform:
+#     name: terraform (plan & apply)
+#     runs-on: ubuntu-latest
+#     outputs:
+#       ecr_url: ${{ steps.set-outputs.outputs.ecr_url }}
+#       eks_cluster_name: ${{ steps.set-outputs.outputs.eks_cluster_name }}
+#       rds_endpoint: ${{ steps.set-outputs.outputs.rds_endpoint }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Setup Python (for terraform helpers if needed)
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.x"
+#       - name: Setup Python (for terraform helpers if needed)
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: "3.x"
 
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
-          terraform_wrapper: false
+#       - name: Install Terraform
+#         uses: hashicorp/setup-terraform@v2
+#         with:
+#           terraform_version: 1.5.7
+#           terraform_wrapper: false
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Terraform Init
-        working-directory: infra
-        run: terraform init -input=false
+#       - name: Terraform Init
+#         working-directory: infra
+#         run: terraform init -input=false
 
-      - name: Terraform Plan
-        working-directory: infra
-        run: terraform plan -var="db_password=${{ secrets.TF_VAR_DB_PASSWORD }}" -out=tfplan
+#       - name: Terraform Plan
+#         working-directory: infra
+#         run: terraform plan -var="db_password=${{ secrets.TF_VAR_DB_PASSWORD }}" -out=tfplan
 
-      - name: Terraform Apply
-        # NOTE: this uses -auto-approve. If you prefer manual approval, remove auto-approve,
-        working-directory: infra
-        run: terraform apply -auto-approve tfplan
+#       - name: Terraform Apply
+#         # NOTE: this uses -auto-approve. If you prefer manual approval, remove auto-approve,
+#         working-directory: infra
+#         run: terraform apply -auto-approve tfplan
 
-      - name: Read terraform outputs
-        working-directory: infra
-        id: set-outputs
-        run: |
-          ECR_URL=$(terraform output -raw ecr_repository_url)
-          EKS_NAME=$(terraform output -raw cluster_name)
-          RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
+#       - name: Read terraform outputs
+#         working-directory: infra
+#         id: set-outputs
+#         run: |
+#           ECR_URL=$(terraform output -raw ecr_repository_url)
+#           EKS_NAME=$(terraform output -raw cluster_name)
+#           RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
 
-          echo "ECR_URL=$(terraform output -raw ecr_repository_url)" >> terraform.env
-          echo "EKS_NAME=$(terraform output -raw cluster_name)" >> terraform.env
-          echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> terraform.env
+#           echo "ECR_URL=$(terraform output -raw ecr_repository_url)" >> terraform.env
+#           echo "EKS_NAME=$(terraform output -raw cluster_name)" >> terraform.env
+#           echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> terraform.env
         
-      - name: Upload outputs
-        uses: actions/upload-artifact@v4
-        with:
-            name: terraform-outputs
-            path: infra/terraform.env
+#       - name: Upload outputs
+#         uses: actions/upload-artifact@v4
+#         with:
+#             name: terraform-outputs
+#             path: infra/terraform.env
 
-  build-and-push:
-    name: Build & Push images
-    runs-on: ubuntu-latest
-    needs: terraform
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      SHORT_TAG: ${{ github.sha }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+#   build-and-push:
+#     name: Build & Push images
+#     runs-on: ubuntu-latest
+#     needs: terraform
+#     env:
+#       AWS_REGION: ${{ secrets.AWS_REGION }}
+#       SHORT_TAG: ${{ github.sha }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Download outputs
-        uses: actions/download-artifact@v4
-        with:
-            name: terraform-outputs
+#       - name: Download outputs
+#         uses: actions/download-artifact@v4
+#         with:
+#             name: terraform-outputs
 
-      - name: Load Terraform outputs
-        run: |
-            source terraform.env
-            echo "Using ECR_URL=$ECR_URL"
+#       - name: Load Terraform outputs
+#         run: |
+#             source terraform.env
+#             echo "Using ECR_URL=$ECR_URL"
 
-      - name: Login to Amazon ECR
-        id: ecr-login
-        run: |
-          source terraform.env
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin "${ECR_URL%/*}" || true
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+#       - name: Login to Amazon ECR
+#         id: ecr-login
+#         run: |
+#           source terraform.env
+#           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin "${ECR_URL%/*}" || true
+#         env:
+#           AWS_REGION: ${{ secrets.AWS_REGION }}
 
-      - name: Create ECR repo if missing
-        run: |
-          source terraform.env
+#       - name: Create ECR repo if missing
+#         run: |
+#           source terraform.env
 
-          # repo name is everything after account-id.dkr.ecr.region.amazonaws.com/
-          REPO_NAME="${ECR_URL#*/}"
-          aws ecr describe-repositories --repository-names "$REPO_NAME" >/dev/null 2>&1 || \
-            aws ecr create-repository --repository-name "$REPO_NAME" >/dev/null
-          echo "ECR_URL=$ECR_URL" > ecr_info.txt
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+#           # repo name is everything after account-id.dkr.ecr.region.amazonaws.com/
+#           REPO_NAME="${ECR_URL#*/}"
+#           aws ecr describe-repositories --repository-names "$REPO_NAME" >/dev/null 2>&1 || \
+#             aws ecr create-repository --repository-name "$REPO_NAME" >/dev/null
+#           echo "ECR_URL=$ECR_URL" > ecr_info.txt
+#         env:
+#           AWS_REGION: ${{ secrets.AWS_REGION }}
 
-      - name: Build and push items-service image
-        id: push_items
-        run: |
-          source terraform.env
-          ITEMS_IMAGE_TAG="${ECR_URL}:items-${SHORT_TAG::7}"
-          echo "Building image $ITEMS_IMAGE_TAG"
-          docker build -t "$ITEMS_IMAGE_TAG" --build-arg APP_DIR=items-service .
-          docker push "$ITEMS_IMAGE_TAG"
-          echo "ITEMS_IMAGE=$ITEMS_IMAGE_TAG" >> images.env
-        env:
-          SHORT_TAG: ${{ github.sha }}
-      - name: Build and push audit-service image
-        id: push_audit
-        run: |
-          source terraform.env
-          AUDIT_IMAGE_TAG="${ECR_URL}:audit-${SHORT_TAG::7}"
-          echo "Building image $AUDIT_IMAGE_TAG"
-          docker build -t "$AUDIT_IMAGE_TAG" --build-arg APP_DIR=audit-service .
-          docker push "$AUDIT_IMAGE_TAG"
-          echo "AUDIT_IMAGE=$AUDIT_IMAGE_TAG" >> images.env
-        env:
-          SHORT_TAG: ${{ github.sha }}
+#       - name: Build and push items-service image
+#         id: push_items
+#         run: |
+#           source terraform.env
+#           ITEMS_IMAGE_TAG="${ECR_URL}:items-${SHORT_TAG::7}"
+#           echo "Building image $ITEMS_IMAGE_TAG"
+#           docker build -t "$ITEMS_IMAGE_TAG" --build-arg APP_DIR=items-service .
+#           docker push "$ITEMS_IMAGE_TAG"
+#           echo "ITEMS_IMAGE=$ITEMS_IMAGE_TAG" >> images.env
+#         env:
+#           SHORT_TAG: ${{ github.sha }}
+#       - name: Build and push audit-service image
+#         id: push_audit
+#         run: |
+#           source terraform.env
+#           AUDIT_IMAGE_TAG="${ECR_URL}:audit-${SHORT_TAG::7}"
+#           echo "Building image $AUDIT_IMAGE_TAG"
+#           docker build -t "$AUDIT_IMAGE_TAG" --build-arg APP_DIR=audit-service .
+#           docker push "$AUDIT_IMAGE_TAG"
+#           echo "AUDIT_IMAGE=$AUDIT_IMAGE_TAG" >> images.env
+#         env:
+#           SHORT_TAG: ${{ github.sha }}
 
-      - name: Upload outputs
-        uses: actions/upload-artifact@v4
-        with:
-            name: images-outputs
-            path: images.env
+#       - name: Upload outputs
+#         uses: actions/upload-artifact@v4
+#         with:
+#             name: images-outputs
+#             path: images.env
 
-  deploy-to-eks:
-    name: Deploy to EKS
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    environment: production
-    env:
-        RDS_ENDPOINT: ${{ needs.terraform.outputs.rds_endpoint }}
-        EKS_CLUSTER_NAME: ${{ needs.terraform.outputs.eks_cluster_name }}
-        AUDIT_IMAGE: ${{ needs.build-and-push.outputs.audit_image }}
-        ITEMS_IMAGE: ${{ needs.build-and-push.outputs.items_image }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+#   deploy-to-eks:
+#     name: Deploy to EKS
+#     runs-on: ubuntu-latest
+#     needs: build-and-push
+#     environment: production
+#     env:
+#         RDS_ENDPOINT: ${{ needs.terraform.outputs.rds_endpoint }}
+#         EKS_CLUSTER_NAME: ${{ needs.terraform.outputs.eks_cluster_name }}
+#         AUDIT_IMAGE: ${{ needs.build-and-push.outputs.audit_image }}
+#         ITEMS_IMAGE: ${{ needs.build-and-push.outputs.items_image }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Download outputs
-        uses: actions/download-artifact@v4
-        with:
-            name: terraform-outputs
+#       - name: Download outputs
+#         uses: actions/download-artifact@v4
+#         with:
+#             name: terraform-outputs
 
-      - name: Download outputs
-        uses: actions/download-artifact@v4
-        with:
-            name: images-outputs
+#       - name: Download outputs
+#         uses: actions/download-artifact@v4
+#         with:
+#             name: images-outputs
 
-      - name: Install kubectl and aws-eks tools
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y jq
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
+#       - name: Install kubectl and aws-eks tools
+#         run: |
+#           sudo apt-get update -y
+#           sudo apt-get install -y jq
+#           curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+#           chmod +x kubectl
+#           sudo mv kubectl /usr/local/bin/
 
-      - name: Get kubeconfig for the created EKS cluster
-        run: |
-          source terraform.env
-          aws eks update-kubeconfig --name $EKS_NAME --region "${{ secrets.AWS_REGION }}"
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+#       - name: Get kubeconfig for the created EKS cluster
+#         run: |
+#           source terraform.env
+#           aws eks update-kubeconfig --name $EKS_NAME --region "${{ secrets.AWS_REGION }}"
+#         env:
+#           AWS_REGION: ${{ secrets.AWS_REGION }}
     
 
-      - name: Apply DB schema ConfigMap
-        run: |
-          source terraform.env
-          kubectl delete configmap db-schema --ignore-not-found
-          envsubst < infra/kubernetes-manifests/db/configmap.yml > infra/kubernetes-manifests/db/db-configmap.yml
+#       - name: Apply DB schema ConfigMap
+#         run: |
+#           source terraform.env
+#           kubectl delete configmap db-schema --ignore-not-found
+#           envsubst < infra/kubernetes-manifests/db/configmap.yml > infra/kubernetes-manifests/db/db-configmap.yml
 
-          kubectl create configmap db-schema --from-file=schema.sql=infra/kubernetes-manifests/db/schema.sql
-          kubectl apply -f infra/kubernetes-manifests/db/db-configmap.yml
-          kubectl apply -f infra/kubernetes-manifests/db/job.yml
+#           kubectl create configmap db-schema --from-file=schema.sql=infra/kubernetes-manifests/db/schema.sql
+#           kubectl apply -f infra/kubernetes-manifests/db/db-configmap.yml
+#           kubectl apply -f infra/kubernetes-manifests/db/job.yml
 
-          kubectl wait --for=condition=complete job/apply-pg-schema --timeout=180s     
-          kubectl logs job/apply-pg-schema
+#           kubectl wait --for=condition=complete job/apply-pg-schema --timeout=180s     
+#           kubectl logs job/apply-pg-schema
 
-      - name: Apply Kubernetes manifests
-        run: |
-          # apply base manifests (create deployments/services/ingresses if not present
+#       - name: Apply Kubernetes manifests
+#         run: |
+#           # apply base manifests (create deployments/services/ingresses if not present
           
-          source images.env
-          envsubst < infra/kubernetes-manifests/audit-service/manifest.yml > infra/kubernetes-manifests/audit-service/manifest-processed.yml
-          envsubst < infra/kubernetes-manifests/items-service/manifest.yml > infra/kubernetes-manifests/items-service/manifest-processed.yml
-          kubectl apply -f infra/kubernetes-manifests/audit-service/manifest-processed.yml
-          kubectl apply -f infra/kubernetes-manifests/items-service/manifest-processed.yml
+#           source images.env
+#           envsubst < infra/kubernetes-manifests/audit-service/manifest.yml > infra/kubernetes-manifests/audit-service/manifest-processed.yml
+#           envsubst < infra/kubernetes-manifests/items-service/manifest.yml > infra/kubernetes-manifests/items-service/manifest-processed.yml
+#           kubectl apply -f infra/kubernetes-manifests/audit-service/manifest-processed.yml
+#           kubectl apply -f infra/kubernetes-manifests/items-service/manifest-processed.yml
 
-          kubectl -n default rollout status deployment/items-service --timeout=120s
-          kubectl -n default rollout status deployment/audit-service --timeout=120s
+#           kubectl -n default rollout status deployment/items-service --timeout=120s
+#           kubectl -n default rollout status deployment/audit-service --timeout=120s

@@ -56,7 +56,7 @@ module "eks" {
   }
 }
 
-data "aws_caller_identity" "current" {}
+# data "aws_caller_identity" "current" {}
 
 resource "aws_security_group" "node_group_one" {
   name_prefix = "node_group_one"
