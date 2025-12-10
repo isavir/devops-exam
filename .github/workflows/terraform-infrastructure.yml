@@ -64,7 +64,7 @@ jobs:
           ECR_URL=$(terraform output -raw ecr_repository_url)
           EKS_NAME=$(terraform output -raw cluster_name)
           SQS_QUEUE_URL=$(terraform output -raw sqs_queue_url)
-          S3_BUCKET=$(terraform output -raw s3_bucket_name)
+          S3_BUCKET=$(terraform output -raw s3_email_storage_bucket_name)
           
           echo "ecr_url=$ECR_URL" >> $GITHUB_OUTPUT
           echo "eks_cluster_name=$EKS_NAME" >> $GITHUB_OUTPUT
