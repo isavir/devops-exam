@@ -15,9 +15,12 @@ on:
       - 'services/**'
       - 'test_*.py'
       - 'Dockerfile'
-  workflows: ["Terraform Infrastructure"]
+  workflow_run:
+    workflows: ["Terraform Infrastructure"]
     types:
       - completed
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
