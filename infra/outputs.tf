@@ -72,7 +72,7 @@ output "ssm_parameter_name" {
 }
 
 
-# IAM Outputs (from eks.tf)
+# IAM Outputs
 output "email_validation_service_role_arn" {
   description = "ARN of the IAM role for email validation service"
   value       = aws_iam_role.email_validation_service_role.arn
@@ -81,16 +81,6 @@ output "email_validation_service_role_arn" {
 output "email_processor_service_role_arn" {
   description = "ARN of the IAM role for email processor service"
   value       = aws_iam_role.email_processor_service_role.arn
-}
-
-output "items_service_role_arn" {
-  description = "ARN of the IAM role for items service"
-  value       = aws_iam_role.items_service_role.arn
-}
-
-output "audit_service_role_arn" {
-  description = "ARN of the IAM role for audit service"
-  value       = aws_iam_role.audit_service_role.arn
 }
 
 # S3 Outputs
