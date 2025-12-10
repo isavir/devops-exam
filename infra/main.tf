@@ -1,10 +1,7 @@
-data "aws_caller_identity" "current" {}
-
-
 terraform {
   required_version = ">= 1.0"
   backend "s3" {
-    bucket  = "devops-exam-terraform-state-bucket-${data.aws_caller_identity.current.account_id}"
+    bucket  = "devops-exam-terraform-state-bucket-1234"
     key     = "terraform.tfstate"
     region  = "us-east-2"
     encrypt = true
