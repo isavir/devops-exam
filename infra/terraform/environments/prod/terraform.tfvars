@@ -1,6 +1,6 @@
 # Production Environment Configuration
 aws_region  = "us-west-2"
-prefix      = "exam-prod"
+prefix      = "exam"
 environment = "production"
 
 # EKS Configuration
