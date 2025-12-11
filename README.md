@@ -2,7 +2,7 @@
 
 email processing system using microservices on AWS, two Python apps that work together - one validates incoming emails via REST API, the other processes them in the background. Everything runs on Kubernetes (EKS) and gets deployed automatically through GitHub Actions.
 
-## What I Built
+## Description:
 
 The project split into a few main pieces:
 
@@ -40,7 +40,7 @@ The project split into a few main pieces:
 - All the subnet tags that EKS needs to work properly
 
 **EKS Module** - The Kubernetes cluster and its needs
-- EKS cluster with managed node groups (because I don't want to manage nodes myself)
+- EKS cluster with managed node groups 
 - AWS Load Balancer Controller installed via Helm
 - IAM Roles for Service Accounts (IRSA) so the pods can talk to AWS services securely
 - Separate service accounts for each microservice with minimal permissions
@@ -63,11 +63,6 @@ K8s deployments as secure as possible:
 - Dropped all unnecessary Linux capabilities 
 - Each service has its own service account that can only access what it needs
 - Added proper health checks so K8s knows when things are working
-
-For monitoring, I added:
-- Health and readiness probes on all services
-- Structured logging with unique request IDs to track requests across services
-- Resource limits so one service can't hog all the CPU
 
 ## The Two Services
 
