@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 1.0"
   backend "s3" {
     bucket  = "devops-exam-terraform-state-bucket-1234"
-    key     = "prod/terraform.tfstate"
+    key     = "terraform.tfstate"
     region  = "us-west-2"
     encrypt = true
   }
