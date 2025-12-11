@@ -133,7 +133,7 @@ jobs:
             echo "Warning: terraform-outputs.env not found, using fallback ECR URL"
             # Fallback - construct ECR URL from AWS account
             AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-            echo "ECR_URL=${AWS_ACCOUNT_ID}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/email-services" >> $GITHUB_ENV
+            echo "ECR_URL=${AWS_ACCOUNT_ID}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/exam-microservices" >> $GITHUB_ENV
           fi
 
       - name: Login to Amazon ECR

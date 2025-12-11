@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
   id-token: write
-  
+
 
 jobs:
   deploy:
@@ -51,8 +51,6 @@ jobs:
           if [ -f "terraform-outputs.env" ]; then
             source terraform-outputs.env
             echo "EKS_CLUSTER_NAME=$EKS_CLUSTER_NAME" >> $GITHUB_ENV
-            echo "SQS_QUEUE_URL=$SQS_QUEUE_URL" >> $GITHUB_ENV
-            echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> $GITHUB_ENV
           else
             echo "Warning: terraform-outputs.env not found"
           fi

@@ -18,7 +18,7 @@ spec:
       serviceAccountName: email-processor-service
       containers:
       - name: email-processor-service
-        image: ${ECR_REPOSITORY_URL}:email-processor-latest
+        image: ${EMAIL_PROCESSOR_IMAGE}
         env:
         - name: SQS_QUEUE_URL_PARAMETER
           value: "/email-service/sqs-queue-url"
