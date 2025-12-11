@@ -139,6 +139,28 @@ jobs:
           
           echo "Deployment completed successfully!"
 
+      - name: Get public endpoint
+        run: |
+          echo "=== Waiting for ALB to be provisioned ==="
+          
+          # Wait for ingress to get an address (ALB takes time to provision)
+          timeout=300
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            ALB_ENDPOINT=$(kubectl get ingress email-validation-ingress -n email-services -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+            
+            if [ -n "$ALB_ENDPOINT" ] && [ "$ALB_ENDPOINT" != "null" ]; then
+              echo "✅ ALB provisioned successfully!"
+              echo "🌐 Public endpoint for email validation service:"
+              echo "   http://$ALB_ENDPOINT"
+              break
+            fi
+            
+            echo "Waiting for ALB to be ready... ($elapsed/$timeout seconds)"
+            sleep 15
+            elapsed=$((elapsed + 15))
+          done
+          
       - name: Cleanup temporary files
         run: |
           rm -f /tmp/email-validation-manifest.yml
