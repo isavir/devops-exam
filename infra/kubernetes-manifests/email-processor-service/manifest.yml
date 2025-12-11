@@ -50,11 +50,15 @@ spec:
             memory: "256Mi"
             cpu: "200m"
         livenessProbe:
+          tcpSocket:
+            port: 8080
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
+          tcpSocket:
+            port: 8080
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 5

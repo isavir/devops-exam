@@ -401,6 +401,18 @@ resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
 # SERVICE ACCOUNTS AND IAM ROLES FOR MICROSERVICES
 # =============================================================================
 
+# Create email-services namespace
+resource "kubernetes_namespace" "email_services" {
+  metadata {
+    name = "email-services"
+    labels = {
+      name = "email-services"
+    }
+  }
+
+  depends_on = [module.eks]
+}
+
 # Email Validation Service IAM Role
 resource "aws_iam_role" "email_validation_service_role" {
   name = "${var.prefix}-email-validation-service-role"
@@ -416,7 +428,7 @@ resource "aws_iam_role" "email_validation_service_role" {
         }
         Condition = {
           StringEquals = {
-            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:default:email-validation-service"
+            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:email-services:email-validation-service"
             "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
@@ -459,7 +471,8 @@ resource "aws_iam_policy" "email_validation_service_policy" {
           "ssm:GetParametersByPath"
         ]
         Resource = [
-          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/email-service/auth-token"
+          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/email-service/auth-token",
+          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/email-service/sqs-queue-url"
         ]
       },
       {
@@ -497,7 +510,7 @@ resource "kubernetes_service_account" "email_validation_service" {
     }
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.eks, kubernetes_namespace.email_services]
 }
 # Email Processor Service IAM Role
 resource "aws_iam_role" "email_processor_service_role" {
@@ -514,7 +527,7 @@ resource "aws_iam_role" "email_processor_service_role" {
         }
         Condition = {
           StringEquals = {
-            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:default:email-processor-service"
+            "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:email-services:email-processor-service"
             "${replace(module.eks.cluster_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com"
           }
         }
@@ -553,6 +566,17 @@ resource "aws_iam_policy" "email_processor_service_policy" {
       {
         Effect = "Allow"
         Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = [
+          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/email-service/sqs-queue-url"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
           "s3:GetObject",
           "s3:PutObject",
           "s3:DeleteObject",
@@ -574,6 +598,14 @@ resource "aws_iam_policy" "email_processor_service_policy" {
         Resource = [
           "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.current.account_id}:key/*"
         ]
+        Condition = {
+          StringEquals = {
+            "kms:ViaService" = [
+              "ssm.${var.aws_region}.amazonaws.com",
+              "s3.${var.aws_region}.amazonaws.com"
+            ]
+          }
+        }
       }
     ]
   })
@@ -595,5 +627,5 @@ resource "kubernetes_service_account" "email_processor_service" {
     }
   }
 
-  depends_on = [module.eks]
+  depends_on = [module.eks, kubernetes_namespace.email_services]
 }
