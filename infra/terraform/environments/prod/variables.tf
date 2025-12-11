@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "prefix" {
   description = "Prefix for all resources"
   type        = string
-  default     = "exam-prod"
+  default     = "exam"
 }
 
 variable "environment" {
