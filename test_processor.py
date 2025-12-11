@@ -20,7 +20,8 @@ def send_test_message_to_sqs():
         print("SQS_QUEUE_URL environment variable not set")
         return
     
-    sqs_client = boto3.client('sqs')
+    aws_region = os.getenv('AWS_REGION', 'us-west-2')
+    sqs_client = boto3.client('sqs', region_name=aws_region)
     
     try:
         message = create_test_message()
@@ -52,7 +53,8 @@ def check_s3_bucket():
         print("S3_BUCKET_NAME environment variable not set")
         return
     
-    s3_client = boto3.client('s3')
+    aws_region = os.getenv('AWS_REGION', 'us-west-2')
+    s3_client = boto3.client('s3', region_name=aws_region)
     
     try:
         # Check if bucket exists
@@ -83,7 +85,8 @@ def monitor_queue_stats():
         print("SQS_QUEUE_URL environment variable not set")
         return
     
-    sqs_client = boto3.client('sqs')
+    aws_region = os.getenv('AWS_REGION', 'us-west-2')
+    sqs_client = boto3.client('sqs', region_name=aws_region)
     
     try:
         response = sqs_client.get_queue_attributes(
