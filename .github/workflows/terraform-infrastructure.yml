@@ -83,4 +83,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: terraform-outputs
-          path: infra/terraform-outputs.env
+          path: infra/terraform/environments/prod/terraform-outputs.env

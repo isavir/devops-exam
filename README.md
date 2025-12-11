@@ -1,6 +1,6 @@
 # Email Processing Platform
 
-So I built this email processing system using microservices on AWS. It's basically two Python Flask apps that work together - one validates incoming emails via REST API, the other processes them in the background. Everything runs on Kubernetes (EKS) and gets deployed automatically through GitHub Actions.
+I built email processing system using microservices on AWS, two Python apps that work together - one validates incoming emails via REST API, the other processes them in the background. Everything runs on Kubernetes (EKS) and gets deployed automatically through GitHub Actions.
 
 ## What I Built
 
