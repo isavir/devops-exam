@@ -18,7 +18,7 @@ spec:
       serviceAccountName: email-validation-service
       containers:
       - name: email-validation-service
-        image: ${ECR_REPOSITORY_URL}:email-validation-latest
+        image: ${$EMAIL_VALIDATION_IMAGE}
         ports:
         - containerPort: 8080
           name: http
