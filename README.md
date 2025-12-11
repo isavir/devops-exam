@@ -14,13 +14,13 @@ The project split into a few main pieces:
 ## How It's Organized
 
 ```
-├── .github/workflows/          # The CI/CD magic happens here
+├── .github/workflows/          # The CI/CD 
 │   ├── terraform-infrastructure.yml
 │   ├── build-and-test.yml
 │   └── deploy-to-eks.yml
 ├── infra/                      # All the Terraform stuff
 │   ├── terraform/
-│   │   ├── modules/           # I made these reusable modules
+│   │   ├── modules/           # modules
 │   │   │   ├── eks/          # EKS cluster setup
 │   │   │   ├── networking/   # VPC and networking
 │   │   │   ├── storage/      # ECR and S3 bucket
@@ -28,9 +28,8 @@ The project split into a few main pieces:
 │   │   └── environments/     # Different env configs
 │   └── kubernetes-manifests/ # K8s deployment files
 ├── services/                  # The actual microservices
-│   ├── email-validation/     # REST API
-│   └── email-processor/      # Background worker
-└── test_*.py                 # Some integration tests
+    ├── email-validation/     # REST API
+    └── email-processor/      # Background worker
 ```
 
 ## The Infrastructure Modules
