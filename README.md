@@ -1,10 +1,10 @@
 # Email Processing Platform
 
-I built email processing system using microservices on AWS, two Python apps that work together - one validates incoming emails via REST API, the other processes them in the background. Everything runs on Kubernetes (EKS) and gets deployed automatically through GitHub Actions.
+email processing system using microservices on AWS, two Python apps that work together - one validates incoming emails via REST API, the other processes them in the background. Everything runs on Kubernetes (EKS) and gets deployed automatically through GitHub Actions.
 
 ## What I Built
 
-The whole thing is split into a few main pieces:
+The project split into a few main pieces:
 
 - An email validation API that checks if the email data looks right and tosses it into a queue
 - A background processor that grabs messages from the queue and saves them to S3  
@@ -33,9 +33,7 @@ The whole thing is split into a few main pieces:
 └── test_*.py                 # Some integration tests
 ```
 
-## The Infrastructure Modules I Created
-
-I broke down the Terraform code into modules:
+## The Infrastructure Modules
 
 **Networking Module** - Sets up the basic AWS networking
 - VPC with public and private subnets across 2 availability zones
@@ -82,7 +80,7 @@ This is the front-door service that handles incoming requests:
 - If everything looks good, drops the message into SQS for processing
 - Has a `/health` endpoint so the load balancer knows it's alive
 
-The cool part is it gets the SQS queue URL from SSM at runtime, so I don't have to hardcode anything.
+It gets the SQS queue URL from SSM at runtime.
 
 ### Email Processor Worker
 
@@ -92,17 +90,17 @@ Runs in the background and does the actual work:
 - Deletes the message from the queue when done, or sends it to the dead letter queue if something goes wrong
 - Can handle multiple messages at once and has configurable polling intervals
 
-Both services log everything with unique request IDs so I can trace a request all the way through the system.
+Both services log everything with unique request IDs to trace a request all the way through the system.
 
 ## The CI/CD Setup
 
 I set up three GitHub Actions workflows that work together:
 
 ### 1. Infrastructure Pipeline
-This runs first and sets up all the AWS resources using Terraform. It gets triggered when I change anything in the `infra/terraform/` folder. After it's done, it exports outputs like the ECR URL and EKS cluster name for the other workflows to use.
+This runs first and sets up all the AWS resources using Terraform. It gets triggered when there is changes`infra/terraform/` folder. After it's done, it exports outputs like the ECR URL and EKS cluster name for the other workflows to use.
 
 ### 2. Build & Test Pipeline  
-This one runs the tests, builds Docker images, and pushes them to ECR. The cool part is it automatically grabs the version from Git tags using:
+This one runs the tests, builds Docker images, and pushes them to ECR. it automatically grabs the version from Git tags using:
 ```bash
 git tag --sort=-version:refname | head -n 1
 ```
@@ -143,7 +141,7 @@ If everything's good, you'll get back:
 ```
 
 ### GET /health
-Just returns whether the service is alive and what it's configured to use.
+returns whether the service is alive and what it's configured to use.
 
 ## Testing It Out
 
