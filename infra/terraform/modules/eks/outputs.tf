@@ -28,6 +28,12 @@ output "oidc_provider_arn" {
   value       = module.eks.oidc_provider_arn
 }
 
+# Kubernetes Namespace
+output "email_services_namespace" {
+  description = "Name of the email services namespace"
+  value       = kubernetes_namespace.email_services.metadata[0].name
+}
+
 # IAM Role ARNs for other modules
 output "email_validation_service_role_arn" {
   description = "ARN of the IAM role for email validation service"

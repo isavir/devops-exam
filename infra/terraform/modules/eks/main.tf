@@ -398,6 +398,24 @@ resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
   role       = aws_iam_role.aws_load_balancer_controller.name
 }
 # =============================================================================
+# KUBERNETES NAMESPACE
+# =============================================================================
+
+# Create the email-services namespace
+resource "kubernetes_namespace" "email_services" {
+  metadata {
+    name = "email-services"
+    labels = {
+      name        = "email-services"
+      app         = "email-services"
+      environment = var.environment
+    }
+  }
+
+  depends_on = [module.eks]
+}
+
+# =============================================================================
 # SERVICE ACCOUNTS AND IAM ROLES FOR MICROSERVICES
 # =============================================================================
 
@@ -492,13 +510,13 @@ resource "aws_iam_role_policy_attachment" "email_validation_service_policy_attac
 resource "kubernetes_service_account" "email_validation_service" {
   metadata {
     name      = "email-validation-service"
-    namespace = "email-services"
+    namespace = kubernetes_namespace.email_services.metadata[0].name
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.email_validation_service_role.arn
     }
   }
 
-  depends_on = [module.eks]
+  depends_on = [kubernetes_namespace.email_services]
 }
 # Email Processor Service IAM Role
 resource "aws_iam_role" "email_processor_service_role" {
@@ -610,11 +628,11 @@ resource "aws_iam_role_policy_attachment" "email_processor_service_policy_attach
 resource "kubernetes_service_account" "email_processor_service" {
   metadata {
     name      = "email-processor-service"
-    namespace = "email-services"
+    namespace = kubernetes_namespace.email_services.metadata[0].name
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.email_processor_service_role.arn
     }
   }
 
-  depends_on = [module.eks]
+  depends_on = [kubernetes_namespace.email_services]
 }
