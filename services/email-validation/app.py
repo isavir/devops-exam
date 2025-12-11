@@ -26,10 +26,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # AWS clients
+AWS_REGION = os.getenv('AWS_REGION', 'us-west-2')
 try:
-    ssm_client = boto3.client('ssm')
-    sqs_client = boto3.client('sqs')
-    logger.info("AWS clients initialized successfully")
+    ssm_client = boto3.client('ssm', region_name=AWS_REGION)
+    sqs_client = boto3.client('sqs', region_name=AWS_REGION)
+    logger.info(f"AWS clients initialized successfully for region: {AWS_REGION}")
 except NoCredentialsError:
     logger.error("AWS credentials not found")
     ssm_client = None

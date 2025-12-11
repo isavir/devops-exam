@@ -11,11 +11,15 @@ import signal
 import threading
 
 # Configure logging
+log_dir = '/app/logs'
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, 'processor.log')
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('processor.log'),
+        logging.FileHandler(log_file),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -45,10 +49,11 @@ class EmailProcessor:
     def _initialize_aws_clients(self):
         """Initialize AWS clients"""
         try:
-            self.sqs_client = boto3.client('sqs')
-            self.s3_client = boto3.client('s3')
-            self.ssm_client = boto3.client('ssm')
-            logger.info("AWS clients initialized successfully")
+            aws_region = os.getenv('AWS_REGION', 'us-west-2')
+            self.sqs_client = boto3.client('sqs', region_name=aws_region)
+            self.s3_client = boto3.client('s3', region_name=aws_region)
+            self.ssm_client = boto3.client('ssm', region_name=aws_region)
+            logger.info(f"AWS clients initialized successfully for region: {aws_region}")
         except NoCredentialsError:
             logger.error("AWS credentials not found")
             raise
