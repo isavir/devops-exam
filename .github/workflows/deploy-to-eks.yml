@@ -32,19 +32,22 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Download Terraform outputs
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@v6
         with:
+          workflow: terraform-infrastructure.yml
           name: terraform-outputs
-          path: .
-        continue-on-error: true
+          workflow_conclusion: success
+          branch: main
 
       - name: Download image tags
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@v6
         with:
+          workflow: build-and-test.yml
           name: image-tags
-          path: .
-        continue-on-error: true
-
+          workflow_conclusion: success
+          run_id: ${{ github.event.workflow_run.id }}
+          branch: main
+          
       - name: Load deployment variables
         run: |
           # Load terraform outputs
