@@ -493,7 +493,7 @@ resource "aws_iam_role_policy_attachment" "email_validation_service_policy_attac
 resource "kubernetes_service_account" "email_validation_service" {
   metadata {
     name      = "email-validation-service"
-    namespace = "default"
+    namespace = "email-services"
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.email_validation_service_role.arn
     }
@@ -592,7 +592,7 @@ resource "aws_iam_role_policy_attachment" "email_processor_service_policy_attach
 resource "kubernetes_service_account" "email_processor_service" {
   metadata {
     name      = "email-processor-service"
-    namespace = "default"
+    namespace = "email-services"
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.email_processor_service_role.arn
     }
