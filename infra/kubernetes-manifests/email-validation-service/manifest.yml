@@ -1,3 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: email-services
+  labels:
+    name: email-services
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
