@@ -148,11 +148,18 @@ jobs:
           aws ecr describe-repositories --repository-names "$REPO_NAME" >/dev/null 2>&1 || \
             aws ecr create-repository --repository-name "$REPO_NAME" >/dev/null
 
+      - name: Get version tag (latest tag)
+        id: get_tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          echo "version=$TAG" >> $GITHUB_OUTPUT
+
       - name: Build and push ${{ matrix.service }} image
         id: build-image
         working-directory: services/${{ matrix.service }}
         run: |
-          IMAGE_TAG="${ECR_URL}:${{ matrix.service }}-${SHORT_SHA::7}"
+          VERSION=${{ steps.get_tag.outputs.version }}
+          IMAGE_TAG="${ECR_URL}:${{ matrix.service }}-${SHORT_SHA::7}-$VERSION"
           echo "Building ${{ matrix.service }} image: $IMAGE_TAG"
           docker build -t "$IMAGE_TAG" \
             -f Dockerfile .
