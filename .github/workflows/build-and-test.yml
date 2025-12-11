@@ -151,7 +151,7 @@ jobs:
       - name: Get version tag (latest tag)
         id: get_tag
         run: |
-          TAG=$(git describe --tags --always)
+          TAG=$(git tag --sort=-version:refname | head -n 1)
           if [ -z "$TAG" ]; then
             TAG="v0.1.0"
           fi
