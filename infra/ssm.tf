@@ -25,3 +25,17 @@ resource "aws_ssm_parameter" "sqs_queue_url" {
     Service     = "email-validation"
   }
 }
+
+# SSM Parameter for S3 Bucket Name
+resource "aws_ssm_parameter" "s3_bucket_name" {
+  name        = "/email-service/s3-bucket-name"
+  description = "S3 Bucket name for email storage"
+  type        = "String"
+  value       = aws_s3_bucket.email_storage.bucket
+
+  tags = {
+    Name        = "email-service-s3-bucket"
+    Environment = "production"
+    Service     = "email-processing"
+  }
+}

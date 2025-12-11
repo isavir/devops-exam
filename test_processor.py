@@ -48,13 +48,21 @@ def send_test_message_to_sqs():
 
 def check_s3_bucket():
     """Check if S3 bucket exists and list recent objects"""
-    bucket_name = os.getenv('S3_BUCKET_NAME')
-    if not bucket_name:
-        print("S3_BUCKET_NAME environment variable not set")
-        return
-    
     aws_region = os.getenv('AWS_REGION', 'us-west-2')
+    s3_bucket_name_parameter = os.getenv('S3_BUCKET_NAME_PARAMETER', '/email-service/s3-bucket-name')
+    
+    # Initialize AWS clients
+    ssm_client = boto3.client('ssm', region_name=aws_region)
     s3_client = boto3.client('s3', region_name=aws_region)
+    
+    try:
+        # Get bucket name from SSM
+        response = ssm_client.get_parameter(Name=s3_bucket_name_parameter)
+        bucket_name = response['Parameter']['Value']
+        print(f"Retrieved S3 bucket name from SSM: {bucket_name}")
+    except Exception as e:
+        print(f"Failed to retrieve S3 bucket name from SSM parameter {s3_bucket_name_parameter}: {str(e)}")
+        return
     
     try:
         # Check if bucket exists

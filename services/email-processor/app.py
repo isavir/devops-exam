@@ -32,14 +32,16 @@ class EmailProcessor:
         self.s3_client = None
         self.ssm_client = None
         self.queue_url = None
-        self.s3_bucket = os.getenv('S3_BUCKET_NAME')
+        self.s3_bucket = None
         self.sqs_queue_url_parameter = os.getenv('SQS_QUEUE_URL_PARAMETER', '/email-service/sqs-queue-url')
+        self.s3_bucket_name_parameter = os.getenv('S3_BUCKET_NAME_PARAMETER', '/email-service/s3-bucket-name')
         self.poll_interval = int(os.getenv('POLL_INTERVAL_SECONDS', '30'))
         self.max_messages = int(os.getenv('MAX_MESSAGES_PER_POLL', '10'))
         self.visibility_timeout = int(os.getenv('VISIBILITY_TIMEOUT_SECONDS', '300'))
         
         self._initialize_aws_clients()
         self._get_sqs_queue_url_from_ssm()
+        self._get_s3_bucket_name_from_ssm()
         self._validate_configuration()
         
         # Setup graceful shutdown
@@ -75,12 +77,26 @@ class EmailProcessor:
             logger.error(f"Unexpected error retrieving SQS Queue URL from SSM: {str(e)}")
             raise
     
+    def _get_s3_bucket_name_from_ssm(self):
+        """Retrieve S3 Bucket Name from SSM Parameter Store"""
+        try:
+            response = self.ssm_client.get_parameter(Name=self.s3_bucket_name_parameter)
+            self.s3_bucket = response['Parameter']['Value']
+            logger.info(f"Retrieved S3 Bucket Name from SSM parameter: {self.s3_bucket_name_parameter}")
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            logger.error(f"Failed to retrieve S3 Bucket Name from SSM parameter {self.s3_bucket_name_parameter} ({error_code}): {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error retrieving S3 Bucket Name from SSM: {str(e)}")
+            raise
+    
     def _validate_configuration(self):
         """Validate required configuration"""
         if not self.queue_url:
             raise ValueError("SQS Queue URL could not be retrieved from SSM parameter")
         if not self.s3_bucket:
-            raise ValueError("S3_BUCKET_NAME environment variable is required")
+            raise ValueError("S3 Bucket Name could not be retrieved from SSM parameter")
         
         logger.info(f"Configuration validated - Queue: {self.queue_url}, Bucket: {self.s3_bucket}")
     

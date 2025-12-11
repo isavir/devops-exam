@@ -25,8 +25,8 @@ Email Validation   Logs & Metrics
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `SQS_QUEUE_URL` | SQS queue URL to poll messages from | - | Yes |
-| `S3_BUCKET_NAME` | S3 bucket name for storing emails | - | Yes |
+| `SQS_QUEUE_URL_PARAMETER` | SSM parameter path for SQS queue URL | `/email-service/sqs-queue-url` | No |
+| `S3_BUCKET_NAME_PARAMETER` | SSM parameter path for S3 bucket name | `/email-service/s3-bucket-name` | No |
 | `AWS_REGION` | AWS region | `us-east-1` | No |
 | `POLL_INTERVAL_SECONDS` | Seconds between polling cycles | `30` | No |
 | `MAX_MESSAGES_PER_POLL` | Maximum messages per SQS poll | `10` | No |

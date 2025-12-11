@@ -71,6 +71,16 @@ output "ssm_parameter_name" {
   value       = module.messaging.ssm_parameter_name
 }
 
+output "ssm_sqs_queue_url_parameter" {
+  description = "Name of the SSM parameter containing the SQS queue URL"
+  value       = module.messaging.sqs_queue_url_ssm_parameter
+}
+
+output "ssm_s3_bucket_name_parameter" {
+  description = "Name of the SSM parameter containing the S3 bucket name"
+  value       = module.storage.s3_bucket_name_ssm_parameter
+}
+
 # IAM Outputs
 output "email_validation_service_role_arn" {
   description = "ARN of the IAM role for email validation service"
