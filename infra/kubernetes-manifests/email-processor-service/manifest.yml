@@ -1,8 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: email-services
+  labels:
+    name: email-services
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: email-processor-service
-  namespace: default
+  namespace: email-services
   labels:
     app: email-processor-service
 spec:
@@ -78,7 +85,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: email-processor-config
-  namespace: default
+  namespace: email-services
 data:
   s3_bucket_name: "${S3_BUCKET_NAME}"
   aws_region: "us-west-2"
@@ -90,7 +97,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: email-processor-service
-  namespace: default
+  namespace: email-services
   labels:
     app: email-processor-service
 spec:
