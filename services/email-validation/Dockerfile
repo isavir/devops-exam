@@ -1,7 +1,5 @@
 FROM python:3.12-slim
 
-# Set the application directory via build argument
-ARG APP_DIR
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -19,14 +17,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (for Docker layer caching)
-COPY ${APP_DIR}/requirements.txt .
+COPY requirements.txt .
 
 # Install dependencies
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 # ---- App layer ----
-COPY ${APP_DIR}/ .
+COPY app.py .
 
 # Create non-root user for security (Kubernetes best practice)
 RUN useradd -m flaskuser
