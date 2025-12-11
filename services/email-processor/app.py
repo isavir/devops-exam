@@ -271,6 +271,7 @@ class EmailProcessor:
         
         logger.info(f"Email Processor stopped. Final stats: {processed_count} processed, {error_count} errors")
 
+
 def main():
     """Main entry point"""
     try:
