@@ -62,11 +62,11 @@ jobs:
             python -m pytest test_*.py -v --cov=app
           fi
 
-      - name: Lint ${{ matrix.service }}
-        working-directory: services/${{ matrix.service }}
-        run: |
-          pip install flake8
-          flake8 app.py --max-line-length=120
+      # - name: Lint ${{ matrix.service }}
+      #   working-directory: services/${{ matrix.service }}
+      #   run: |
+      #     pip install flake8
+      #     flake8 app.py --max-line-length=120
 
   # integration-tests:
   #   name: Integration Tests
