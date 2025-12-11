@@ -200,7 +200,7 @@ class EmailProcessor:
                 QueueUrl=self.queue_url,
                 MaxNumberOfMessages=self.max_messages,
                 WaitTimeSeconds=20,  
-                VisibilityTimeoutSeconds=self.visibility_timeout,
+                VisibilityTimeout=self.visibility_timeout,
                 MessageAttributeNames=['All']
             )
             
