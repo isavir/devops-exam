@@ -42,23 +42,23 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Terraform Init
-        working-directory: infra
+        working-directory: infra/terraform/environments/prod
         run: terraform init -input=false
 
       - name: Terraform Validate
-        working-directory: infra
+        working-directory: infra/terraform/environments/prod
         run: terraform validate
 
       - name: Terraform Plan
-        working-directory: infra
+        working-directory: infra/terraform/environments/prod
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
-        working-directory: infra
+        working-directory: infra/terraform/environments/prod
         run: terraform apply -auto-approve tfplan
 
       - name: Export Terraform Outputs
-        working-directory: infra
+        working-directory: infra/terraform/environments/prod
         id: terraform-outputs
         run: |
           ECR_URL=$(terraform output -raw ecr_repository_url)
