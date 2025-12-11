@@ -45,7 +45,6 @@ jobs:
           workflow: build-and-test.yml
           name: image-tags
           workflow_conclusion: success
-          run_id: ${{ github.event.workflow_run.id }}
           branch: main
           
       - name: Load deployment variables
