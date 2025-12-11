@@ -123,7 +123,6 @@ jobs:
           workflow: terraform-infrastructure.yml
           name: terraform-outputs
           workflow_conclusion: success
-          run_id: ${{ github.event.workflow_run.id }}
           branch: main
 
       - name: Load infrastructure outputs
