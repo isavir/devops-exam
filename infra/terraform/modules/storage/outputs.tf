@@ -17,3 +17,8 @@ output "s3_email_storage_bucket_arn" {
   description = "ARN of the S3 bucket for email storage"
   value       = aws_s3_bucket.email_storage.arn
 }
+
+output "s3_bucket_name_ssm_parameter" {
+  description = "SSM parameter name for S3 bucket name"
+  value       = aws_ssm_parameter.s3_bucket_name.name
+}

@@ -29,11 +29,8 @@ spec:
         env:
         - name: SQS_QUEUE_URL_PARAMETER
           value: "/email-service/sqs-queue-url"
-        - name: S3_BUCKET_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: email-processor-config
-              key: s3_bucket_name
+        - name: S3_BUCKET_NAME_PARAMETER
+          value: "/email-service/s3-bucket-name"
         - name: AWS_REGION
           value: "us-west-2"
         - name: POLL_INTERVAL_SECONDS
@@ -71,16 +68,5 @@ spec:
       securityContext:
         fsGroup: 1000
       restartPolicy: Always
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: email-processor-config
-  namespace: email-services
-data:
-  s3_bucket_name: "${S3_BUCKET_NAME}"
-  aws_region: "us-west-2"
-  poll_interval_seconds: "30"
-  max_messages_per_poll: "10"
-  visibility_timeout_seconds: "300"
+
 

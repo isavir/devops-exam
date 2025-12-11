@@ -559,7 +559,8 @@ resource "aws_iam_policy" "email_processor_service_policy" {
           "ssm:GetParametersByPath"
         ]
         Resource = [
-          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/email-service/sqs-queue-url"
+          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/email-service/sqs-queue-url",
+          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/email-service/s3-bucket-name"
         ]
       },
       {

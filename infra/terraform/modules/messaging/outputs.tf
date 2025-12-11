@@ -17,3 +17,8 @@ output "ssm_parameter_name" {
   description = "Name of the SSM parameter containing the auth token"
   value       = aws_ssm_parameter.email_validation_token.name
 }
+
+output "sqs_queue_url_ssm_parameter" {
+  description = "Name of the SSM parameter containing the SQS queue URL"
+  value       = aws_ssm_parameter.sqs_queue_url.name
+}
