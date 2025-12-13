@@ -185,6 +185,30 @@ Just push to the `main` branch and watch the magic happen:
 3. Services get deployed to EKS
 4. You get a public ALB endpoint to hit
 
+## First-Time Deployment
+
+When deploying to a new AWS account for the first time, you might encounter this Terraform error during the infrastructure setup:
+
+```
+│ Warning: Helm release "" was created but has a failed status. Use the `helm` command to investigate the error, correct it, then run Terraform again.
+│  
+│   with helm_release.alb-controller,
+│   on aws-alb-controller.tf line 75, in resource "helm_release" "alb-controller":
+│   75: resource "helm_release" "alb-controller" {
+│ 
+│ Error: context deadline exceeded
+│  
+│   with helm_release.alb-controller,
+│   on aws-alb-controller.tf line 75, in resource "helm_release" "alb-controller":
+│   75: resource "helm_release" "alb-controller" {
+```
+
+This happens because the AWS Load Balancer Controller Helm chart installation can timeout on the first run in a new account. The EKS cluster needs a moment to fully initialize before the Helm chart can be successfully installed.
+
+**Solution**: Simply re-run the Terraform workflow. The second run will complete successfully as the EKS cluster will be fully ready by then. You can do this by:
+
+This is a one-time issue that only occurs during the initial deployment to a fresh AWS account.
+
 ## Configuration Strategy
 
 The key SSM parameters are:
